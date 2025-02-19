@@ -47,12 +47,28 @@ function clearInput() {
 }
 
 // calc :
+// function calc() {
+//   const { value } = calc_area;
+
+//   try {
+//     const result = eval(value);
+
+//     if (!isNaN(result)) {
+//       calc_area.value = result.toString();
+//     } else {
+//       alert("Invalid input, please check your expression.");
+//     }
+//   } catch (error) {
+//     alert("Invalid input, please check your expression.");
+//   }
+// }
+
+// Function to evaluate expressions without `eval()`
 function calc() {
   const { value } = calc_area;
 
   try {
-    const result = eval(value);
-
+    const result = evaluateExpression(value);
     if (!isNaN(result)) {
       calc_area.value = result.toString();
     } else {
@@ -61,6 +77,79 @@ function calc() {
   } catch (error) {
     alert("Invalid input, please check your expression.");
   }
+}
+
+// Function to evaluate mathematical expressions using a stack-based approach
+function evaluateExpression(expression) {
+  const tokens = tokenize(expression);
+  const postfix = infixToPostfix(tokens);
+  return evaluatePostfix(postfix);
+}
+
+// Function to tokenize the input expression (splits numbers and operators)
+function tokenize(expression) {
+  const regex = /\d+(\.\d+)?|[+\-*/%]/g;
+  return expression.match(regex) || [];
+}
+
+// Convert infix expression to postfix notation (Shunting-Yard Algorithm)
+function infixToPostfix(tokens) {
+  const precedence = { "+": 1, "-": 1, "*": 2, "/": 2, "%": 2 };
+  const outputQueue = [];
+  const operatorStack = [];
+
+  tokens.forEach((token) => {
+    if (!isNaN(token)) {
+      outputQueue.push(parseFloat(token));
+    } else if (token in precedence) {
+      while (
+        operatorStack.length &&
+        precedence[operatorStack[operatorStack.length - 1]] >= precedence[token]
+      ) {
+        outputQueue.push(operatorStack.pop());
+      }
+      operatorStack.push(token);
+    }
+  });
+
+  while (operatorStack.length) {
+    outputQueue.push(operatorStack.pop());
+  }
+
+  return outputQueue;
+}
+
+// Evaluate postfix expression using a stack
+function evaluatePostfix(postfix) {
+  const stack = [];
+
+  postfix.forEach((token) => {
+    if (!isNaN(token)) {
+      stack.push(token);
+    } else {
+      const b = stack.pop();
+      const a = stack.pop();
+      switch (token) {
+        case "+":
+          stack.push(a + b);
+          break;
+        case "-":
+          stack.push(a - b);
+          break;
+        case "*":
+          stack.push(a * b);
+          break;
+        case "/":
+          stack.push(a / b);
+          break;
+        case "%":
+          stack.push(a % b);
+          break;
+      }
+    }
+  });
+
+  return stack[0]; // return the final result to display the calculation
 }
 
 // when user cliks the number that time addNum funtion should call :
@@ -79,7 +168,7 @@ document.querySelectorAll(".button_group > button").forEach((e) => {
     } else if (classList.contains("opr")) {
       addOpr(innerText);
     } else if (classList.contains("calc")) {
-      calc(innerText);
+      calc();
     } else if (classList.contains("delete")) {
       del();
     }
